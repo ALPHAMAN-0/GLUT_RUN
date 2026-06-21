@@ -1,0 +1,18 @@
+{
+  "name": "GLUT Dev",
+  "build": { "dockerfile": "Dockerfile" },
+  "forwardPorts": [6080],
+  "portsAttributes": {
+    "6080": { "label": "noVNC Display", "onAutoForward": "openBrowser" }
+  },
+  "postStartCommand": "bash .devcontainer/start-vnc.sh",
+  "remoteEnv": {
+    "DISPLAY": ":0",
+    "LIBGL_ALWAYS_SOFTWARE": "1"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.cpptools"]
+    }
+  }
+}

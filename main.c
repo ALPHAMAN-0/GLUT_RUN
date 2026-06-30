@@ -1,21 +1,22 @@
-#include <GL/glut.h>
+#ifdef _WIN32
+#include <windows.h>  // for MS Windows
+#endif
+#include <GL/glut.h>  // GLUT, include glu.h and gl.h
 
-void display(void) {
-    glClear(GL_COLOR_BUFFER_BIT);
-    glBegin(GL_TRIANGLES);
-        glColor3f(1, 0, 0); glVertex2f(-0.5f, -0.5f);
-        glColor3f(0, 1, 0); glVertex2f( 0.5f, -0.5f);
-        glColor3f(0, 0, 1); glVertex2f( 0.0f,  0.5f);
-    glEnd();
-    glFlush();
+/* Handler for window-repaint event. Called when the window first appears
+   and whenever the window needs to be re-painted. */
+void display() {
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Set background color to white
+    glClear(GL_COLOR_BUFFER_BIT);           // Clear the color buffer (background)
+    glFlush();                              // Render now
 }
 
-int main(int argc, char **argv) {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowSize(500, 500);
-    glutCreateWindow("GLUT in Docker");
-    glutDisplayFunc(display);
-    glutMainLoop();
+/* Main function: GLUT runs as a console application starting at main() */
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);                  // Initialize GLUT
+    glutCreateWindow("OpenGL Setup Test");  // Create a window with the given title
+    glutInitWindowSize(320, 320);           // Set the window's initial width & height
+    glutDisplayFunc(display);               // Register display callback handler
+    glutMainLoop();                         // Enter the event-processing loop
     return 0;
 }

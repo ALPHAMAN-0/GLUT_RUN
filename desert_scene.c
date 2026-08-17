@@ -1,11 +1,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#else
 #include <GL/glut.h>
-#endif
 #include <math.h>
 
 void drawRect(float x1, float y1, float x2, float y2)

@@ -77,76 +77,136 @@ void drawSun(float cx, float cy)
     drawEllipse(cx, cy, 24, 24);
 }
 
-/* haze band drifting across the sky */
-void drawWave(float baseY, float amp, float freq, float phase, float speed)
+/* One cloud. It is just three white circles sitting next to each other,
+   with the middle one lifted a bit so the top looks puffy. */
+void drawCloud(float x, float y, float size)
 {
-    float off = gTime * speed;
-    glColor3f(0.80f, 0.97f, 0.93f);
-    glLineWidth(2.0f);
-    glBegin(GL_LINE_STRIP);
-    for (int x = 0; x <= 800; x += 10)
-    {
-        float y = baseY + amp * sin((x + off) * freq + phase);
-        glVertex2f(x, y);
-    }
-    glEnd();
-}
-
-/* two-tone cloud: one soft haze shape (single ellipse so alpha never seams),
-   a shaded underbelly cluster, then the same cluster nudged up in white */
-void drawCloud(float cx, float cy, float s)
-{
-    glColor4f(1.0f, 1.0f, 1.0f, 0.22f);
-    drawEllipse(cx, cy + 2 * s, 52 * s, 20 * s);
-
-    glColor3f(0.78f, 0.92f, 0.94f);
-    drawEllipse(cx - 20 * s, cy - 1 * s, 19 * s, 11 * s);
-    drawEllipse(cx +  2 * s, cy + 1 * s, 24 * s, 14 * s);
-    drawEllipse(cx + 24 * s, cy - 2 * s, 17 * s, 10 * s);
-
     glColor3f(1.0f, 1.0f, 1.0f);
-    drawEllipse(cx - 20 * s, cy + 3 * s, 18 * s, 10 * s);
-    drawEllipse(cx +  2 * s, cy + 5 * s, 23 * s, 13 * s);
-    drawEllipse(cx + 24 * s, cy + 2 * s, 16 * s,  9 * s);
+
+    drawEllipse(x - 20 * size, y,            18 * size, 12 * size);  /* left  */
+    drawEllipse(x + 20 * size, y,            18 * size, 12 * size);  /* right */
+    drawEllipse(x,             y +  6 * size, 24 * size, 16 * size); /* middle */
 }
 
-/* thin wisp riding higher up */
-void drawWispCloud(float cx, float cy, float s)
+/* A row of clouds that drifts to the left forever.
+   gap   = how far apart the clouds are
+   speed = how fast they drift */
+void drawCloudRow(float y, float size, float gap, float speed)
 {
-    glColor4f(1.0f, 1.0f, 1.0f, 0.45f);
-    drawEllipse(cx, cy, 40 * s, 5 * s);
-    drawEllipse(cx - 26 * s, cy - 2 * s, 18 * s, 3.5f * s);
-    drawEllipse(cx + 28 * s, cy + 1 * s, 15 * s, 3.0f * s);
+    /* enough clouds to fill the screen, plus a few spare ones
+       waiting off the edges */
+    int count = 800 / gap + 3;
+    float rowLength = count * gap;
+
+    for (int i = 0; i < count; i++)
+    {
+        /* line them up, then drift the whole row left as time passes */
+        float x = i * gap - speed * gTime;
+
+        /* when a cloud floats off the left side,
+           send it back around to the right side */
+        while (x < -gap)
+            x = x + rowLength;
+
+        drawCloud(x, y, size);
+    }
 }
 
-void drawBird(float cx, float cy, float s, float phase)
+/* One bird. It is just two lines that make a "V" shape.
+   wing = how high the wing tips are right now. */
+void drawBird(float x, float y, float size, float wing)
 {
-    float flap = 0.35f + 0.65f * sin(gTime * 6.0f + phase);
-    float w = 7 * s, h = 4 * s * flap;
     glColor3f(0.28f, 0.36f, 0.42f);
-    glLineWidth(1.6f);
+    glLineWidth(2.0f);
+
     glBegin(GL_LINE_STRIP);
-        glVertex2f(cx - w, cy);
-        glVertex2f(cx - w * 0.45f, cy + h);
-        glVertex2f(cx, cy);
-        glVertex2f(cx + w * 0.45f, cy + h);
-        glVertex2f(cx + w, cy);
+        glVertex2f(x - 8 * size, y + wing);   /* left wing tip  */
+        glVertex2f(x,            y);          /* the body       */
+        glVertex2f(x + 8 * size, y + wing);   /* right wing tip */
     glEnd();
+}
+
+/* A row of birds flying to the left, flapping their wings.
+   They stay at the same height. */
+void drawBirdRow(float y, float size, float gap, float speed)
+{
+    /* enough birds to fill the screen, plus a few spare ones
+       waiting off the edges */
+    int count = 800 / gap + 3;
+    float rowLength = count * gap;
+
+    for (int i = 0; i < count; i++)
+    {
+        /* line them up, then fly the whole row left as time passes */
+        float x = i * gap - speed * gTime;
+
+        /* when a bird flies off the left side,
+           send it back around to the right side */
+        while (x < -gap)
+            x = x + rowLength;
+
+        /* the wings go up and down */
+        float wing = 5 * size * sin(gTime * 6 + i);
+
+        drawBird(x, y, size, wing);
+    }
 }
 
 /* ---------------- terrain ---------------- */
-void drawHill(float baseY, float amp, float freq, float r, float g, float b, float speed)
+
+/* One mountain. It is a triangle cut down the middle:
+   the left half is bright because the sun is on that side,
+   and the right half is darker because it is in shadow. */
+void drawMountain(float x, float bottom, float width, float height,
+                  float r, float g, float b)
 {
-    float off = gTime * speed;
-    glColor3f(r, g, b);
-    glBegin(GL_QUAD_STRIP);
-    for (int x = 0; x <= 800; x += 10)
-    {
-        float y = baseY + amp * sin((x + off) * freq);
-        glVertex2f(x, y);
-        glVertex2f(x, 160);
-    }
+    float top = bottom + height;
+
+    /* dark half, on the right */
+    glColor3f(r * 0.72f, g * 0.72f, b * 0.72f);
+    glBegin(GL_TRIANGLES);
+        glVertex2f(x,         top);       /* the peak         */
+        glVertex2f(x + width, bottom);    /* bottom right     */
+        glVertex2f(x,         bottom);    /* middle of bottom */
     glEnd();
+
+    /* bright half, on the left */
+    glColor3f(r, g, b);
+    glBegin(GL_TRIANGLES);
+        glVertex2f(x,         top);       /* the peak         */
+        glVertex2f(x,         bottom);    /* middle of bottom */
+        glVertex2f(x - width, bottom);    /* bottom left      */
+    glEnd();
+}
+
+/* All the mountains, drawn one at a time.
+   Every line is one mountain, like this:
+   drawMountain(x, bottom, width, height, red, green, blue) */
+void drawMountains()
+{
+    /* back row: far away, so pale and tall */
+    drawMountain(-60, 160, 110,  95, 0.80f, 0.73f, 0.70f);
+    drawMountain(110, 160, 110,  68, 0.80f, 0.73f, 0.70f);
+    drawMountain(280, 160, 110, 110, 0.80f, 0.73f, 0.70f);
+    drawMountain(450, 160, 110,  78, 0.80f, 0.73f, 0.70f);
+    drawMountain(620, 160, 110, 100, 0.80f, 0.73f, 0.70f);
+    drawMountain(790, 160, 110,  62, 0.80f, 0.73f, 0.70f);
+
+    /* middle row */
+    drawMountain( 20, 160, 100,  70, 0.70f, 0.59f, 0.53f);
+    drawMountain(180, 160, 100,  50, 0.70f, 0.59f, 0.53f);
+    drawMountain(340, 160, 100,  82, 0.70f, 0.59f, 0.53f);
+    drawMountain(500, 160, 100,  58, 0.70f, 0.59f, 0.53f);
+    drawMountain(660, 160, 100,  75, 0.70f, 0.59f, 0.53f);
+    drawMountain(820, 160, 100,  46, 0.70f, 0.59f, 0.53f);
+
+    /* front row: close by, so darker and shorter */
+    drawMountain(-30, 160, 95, 50, 0.58f, 0.45f, 0.37f);
+    drawMountain(120, 160, 95, 35, 0.58f, 0.45f, 0.37f);
+    drawMountain(270, 160, 95, 57, 0.58f, 0.45f, 0.37f);
+    drawMountain(420, 160, 95, 40, 0.58f, 0.45f, 0.37f);
+    drawMountain(570, 160, 95, 52, 0.58f, 0.45f, 0.37f);
+    drawMountain(720, 160, 95, 32, 0.58f, 0.45f, 0.37f);
 }
 
 void drawGround()
@@ -348,22 +408,18 @@ void display()
     drawSun(660, 385);
 
     /* clouds drift behind everything -- higher ones are farther, so slower */
-    drawWispCloud(wrapX(140, 5.0f, 90.0f), 415, 1.0f);
-    drawWispCloud(wrapX(560, 7.0f, 90.0f), 396, 0.8f);
-    drawCloud(wrapX( 90, 9.0f,  100.0f), 372, 1.25f);
-    drawCloud(wrapX(430, 12.0f, 100.0f), 340, 0.85f);
-    drawCloud(wrapX(650, 15.0f, 100.0f), 300, 0.65f);
-    drawCloud(wrapX(260, 17.0f, 100.0f), 268, 0.55f);
+    /* high clouds: small and slow */
+    drawCloudRow(405, 0.7f, 320,  5.0f);
+    /* middle clouds: big and medium speed */
+    drawCloudRow(345, 1.1f, 270,  9.0f);
+    /* low clouds: medium and fastest */
+    drawCloudRow(288, 0.8f, 230, 14.0f);
 
-    for (int i = 0; i < 5; i++)
-        drawBird(wrapX(120 + i * 170.0f, 26.0f, 30.0f),
-                 330 + 22 * sin(gTime * 0.7f + i), 1.0f + 0.2f * (i % 3), i * 1.3f);
+    /* two flocks of birds at different heights */
+    drawBirdRow(375, 1.0f, 190, 26.0f);
+    drawBirdRow(315, 0.8f, 240, 20.0f);
 
-    drawWave(300, 8, 0.02f,  0.0f, 14.0f);
-    drawWave(255, 6, 0.025f, 1.5f, 22.0f);
-
-    drawHill(230, 25, 0.010f, 0.78f, 0.80f, 0.90f, 6.0f);
-    drawHill(210, 20, 0.014f, 0.70f, 0.73f, 0.87f, 12.0f);
+    drawMountains();
 
     /* background greenery -- slow parallax */
     for (int i = 0; i < 7; i++)
@@ -417,7 +473,7 @@ void keyboard(unsigned char key, int, int)
     if (key == 27) exit(0);          /* Esc */
     if (key == 'p' || key == 'P') gPaused = !gPaused;
     if (key == 'r' || key == 'R') gTime = 0.0f;
-    //if (key == ' ') playerJump();
+    if (key == ' ') playerJump();      /* Space */
 }
 
 void reshape(int w, int h)

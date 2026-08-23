@@ -6,7 +6,6 @@
 #endif
 #include <math.h>
 #include <stdlib.h>
-#include "player.h"
 
 #define PI 3.14159265f
 
@@ -469,12 +468,6 @@ void display()
     drawRock(wrapX(640, 150.0f, 60.0f), 30, 16, 9);
     drawRock(wrapX(120, 150.0f, 60.0f), 78, 12, 7);
     
-    glPushMatrix();
-        glTranslatef(170, 30, 0);
-        glScalef(0.75f, 0.75f, 1.0f);
-        drawPlayer(0, 0);
-    glPopMatrix();
-
     drawTumbleweed(wrapX(500,  150.0f, 60.0f), 18, 15, 150.0f);
     drawTumbleweed(wrapX(180,  185.0f, 60.0f), 46, 20, 185.0f);
     drawTumbleweed(wrapX(720,  120.0f, 60.0f), 88, 13, 120.0f);
@@ -488,7 +481,6 @@ void tick(int)
     if (!gPaused)
     {
         gTime += 0.016f;
-        playerUpdate(0.016f);
 
         sunAngle += 0.3f;                /* turn the sun a little */
         if (sunAngle > 360.0f)
@@ -504,7 +496,6 @@ void keyboard(unsigned char key, int, int)
     if (key == 27) exit(0);          /* Esc */
     if (key == 'p' || key == 'P') gPaused = !gPaused;
     if (key == 'r' || key == 'R') gTime = 0.0f;
-    if (key == ' ') playerJump();      /* Space */
 }
 
 void reshape(int w, int h)

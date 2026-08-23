@@ -256,22 +256,7 @@ void drawGround()
     glColor3f(0.45f, 0.19f, 0.12f);
     drawRect(0, 0, 800, 110);
 
-    /* streaks in the foreground dirt -- these scroll fastest (closest layer) */
-    float off = gTime * 95.0f;
-    glColor3f(0.55f, 0.25f, 0.16f);
-    glLineWidth(1.5f);
-    for (int line = 0; line < 3; line++)
-    {
-        float baseY = 25 + line * 30;
-        glBegin(GL_LINE_STRIP);
-        for (int x = 0; x <= 800; x += 12)
-        {
-            float y = baseY + 6 * sin((x + off) * 0.03f + line);
-            glVertex2f(x, y);
-        }
-        glEnd();
-    }
-
+    /* little stones scattered on the dirt */
     glColor3f(0.30f, 0.12f, 0.08f);
     for (int i = 0; i < 14; i++)
     {
@@ -295,101 +280,82 @@ void drawRock(float cx, float cy, float rx, float ry)
     drawEllipse(cx - rx * 0.25f, cy + ry * 0.25f, rx * 0.45f, ry * 0.35f);
 }
 
-/* vertical capsule: flat bottom at baseY, rounded top, total height h */
-void drawCapsule(float cx, float baseY, float w, float h)
+/* A big cactus. It is just five green boxes:
+   one tall box standing up, and two arms made of two boxes each.
+   Every box is four corners: bottom-left, bottom-right, top-right, top-left. */
+void drawCactus(float x, float bottom)
 {
-    float r = w * 0.5f;
-    drawRect(cx - r, baseY, cx + r, baseY + h - r);
-    drawEllipse(cx, baseY + h - r, r, r);
-}
-
-/* an arm: out from the trunk by `reach` (negative = left), then up by `rise` */
-static void cactusArm(float sx, float sy, float reach, float rise, float w)
-{
-    float r  = w * 0.5f;
-    float ex = sx + reach;
-    drawRect((sx < ex ? sx : ex), sy - r, (sx < ex ? ex : sx), sy + r);
-    drawEllipse(ex, sy, r, r);
-    drawRect(ex - r, sy, ex + r, sy + rise - r);
-    drawEllipse(ex, sy + rise - r, r, r);
-}
-
-/* saguaro: rounded trunk + two bent arms, ribbed and shaded */
-void drawCactus(float cx, float baseY, float s)
-{
-    float w = 17 * s;
-    float h = 80 * s;
-
-    glColor4f(0.35f, 0.20f, 0.10f, 0.22f);
-    drawEllipse(cx + 10 * s, baseY + 3 * s, 26 * s, 5 * s);
-
     glColor3f(0.20f, 0.47f, 0.26f);
-    drawCapsule(cx, baseY, w, h);
-    cactusArm(cx - 3 * s, baseY + 33 * s, -21 * s, 30 * s, 12 * s);
-    cactusArm(cx + 3 * s, baseY + 47 * s,  23 * s, 25 * s, 11 * s);
 
-    /* lit edge on the left */
-    glColor3f(0.30f, 0.62f, 0.34f);
-    drawRect(cx - 7.5f * s, baseY, cx - 5.0f * s, baseY + h - 10 * s);
-
-    /* ribs */
-    glColor3f(0.13f, 0.33f, 0.19f);
-    glLineWidth(1.5f);
-    glBegin(GL_LINES);
-        glVertex2f(cx - 2 * s, baseY + 3 * s);  glVertex2f(cx - 2 * s, baseY + h - 11 * s);
-        glVertex2f(cx + 3 * s, baseY + 3 * s);  glVertex2f(cx + 3 * s, baseY + h - 11 * s);
-        glVertex2f(cx - 24 * s, baseY + 40 * s); glVertex2f(cx - 24 * s, baseY + 57 * s);
-        glVertex2f(cx + 26 * s, baseY + 54 * s); glVertex2f(cx + 26 * s, baseY + 66 * s);
+    /* the tall middle */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 9, bottom);
+        glVertex2f(x + 9, bottom);
+        glVertex2f(x + 9, bottom + 85);
+        glVertex2f(x - 9, bottom + 85);
     glEnd();
 
-    /* spines along the trunk */
-    glColor3f(0.78f, 0.82f, 0.60f);
-    glLineWidth(1.0f);
-    glBegin(GL_LINES);
-    for (int i = 0; i < 7; i++)
-    {
-        float y = baseY + (8 + i * 9) * s;
-        glVertex2f(cx - w * 0.5f, y);          glVertex2f(cx - w * 0.5f - 3 * s, y + 2 * s);
-        glVertex2f(cx + w * 0.5f, y + 4 * s);  glVertex2f(cx + w * 0.5f + 3 * s, y + 6 * s);
-    }
+    /* left arm, going across */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 28, bottom + 33);
+        glVertex2f(x -  9, bottom + 33);
+        glVertex2f(x -  9, bottom + 44);
+        glVertex2f(x - 28, bottom + 44);
     glEnd();
 
-    /* blooms on the crowns */
-    glColor3f(0.97f, 0.88f, 0.52f);
-    drawEllipse(cx, baseY + h - 2 * s, 3.5f * s, 3.0f * s);
-    drawEllipse(cx - 24 * s, baseY + 62 * s, 3.0f * s, 2.6f * s);
+    /* left arm, going up */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 28, bottom + 33);
+        glVertex2f(x - 17, bottom + 33);
+        glVertex2f(x - 17, bottom + 66);
+        glVertex2f(x - 28, bottom + 66);
+    glEnd();
+
+    /* right arm, going across */
+    glBegin(GL_QUADS);
+        glVertex2f(x +  9, bottom + 48);
+        glVertex2f(x + 28, bottom + 48);
+        glVertex2f(x + 28, bottom + 59);
+        glVertex2f(x +  9, bottom + 59);
+    glEnd();
+
+    /* right arm, going up */
+    glBegin(GL_QUADS);
+        glVertex2f(x + 17, bottom + 48);
+        glVertex2f(x + 28, bottom + 48);
+        glVertex2f(x + 28, bottom + 77);
+        glVertex2f(x + 17, bottom + 77);
+    glEnd();
 }
 
-/* stubby barrel cactus with a flower */
-void drawBarrelCactus(float cx, float baseY, float s)
-{
-    glColor3f(0.23f, 0.44f, 0.27f);
-    drawEllipse(cx, baseY + 8 * s, 8 * s, 10 * s);
-    glColor3f(0.32f, 0.58f, 0.34f);
-    drawEllipse(cx - 2.5f * s, baseY + 9 * s, 3.0f * s, 6 * s);
-    glColor3f(0.14f, 0.31f, 0.19f);
-    glLineWidth(1.2f);
-    glBegin(GL_LINES);
-        glVertex2f(cx - 4 * s, baseY + 3 * s); glVertex2f(cx - 4 * s, baseY + 14 * s);
-        glVertex2f(cx + 1 * s, baseY + 1 * s); glVertex2f(cx + 1 * s, baseY + 17 * s);
-        glVertex2f(cx + 5 * s, baseY + 3 * s); glVertex2f(cx + 5 * s, baseY + 14 * s);
-    glEnd();
-    glColor3f(0.93f, 0.48f, 0.36f);
-    drawEllipse(cx + 1 * s, baseY + 18 * s, 2.6f * s, 2.2f * s);
-}
-
-/* prickly pear: overlapping pads */
-void drawSmallCactus(float cx, float baseY, float s)
+/* A little cactus. Three small boxes: a middle one and two stubby arms. */
+void drawSmallCactus(float x, float bottom)
 {
     glColor3f(0.25f, 0.49f, 0.29f);
-    drawEllipse(cx, baseY + 9 * s, 7 * s, 10 * s);
-    drawEllipse(cx - 8 * s, baseY + 17 * s, 5.5f * s, 6.5f * s);
-    drawEllipse(cx + 8 * s, baseY + 15 * s, 5.0f * s, 6.0f * s);
-    glColor3f(0.33f, 0.60f, 0.35f);
-    drawEllipse(cx - 2 * s, baseY + 10 * s, 2.5f * s, 5 * s);
-    glColor3f(0.85f, 0.35f, 0.30f);
-    drawEllipse(cx - 8 * s, baseY + 23 * s, 1.8f * s, 2.2f * s);
-    drawEllipse(cx + 9 * s, baseY + 20 * s, 1.6f * s, 2.0f * s);
+
+    /* the middle */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 5, bottom);
+        glVertex2f(x + 5, bottom);
+        glVertex2f(x + 5, bottom + 22);
+        glVertex2f(x - 5, bottom + 22);
+    glEnd();
+
+    /* left arm, standing up */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 13, bottom + 4);
+        glVertex2f(x -  6, bottom + 4);
+        glVertex2f(x -  6, bottom + 17);
+        glVertex2f(x - 13, bottom + 17);
+    glEnd();
+
+    /* right arm, standing up */
+    glBegin(GL_QUADS);
+        glVertex2f(x +  6, bottom + 6);
+        glVertex2f(x + 13, bottom + 6);
+        glVertex2f(x + 13, bottom + 19);
+        glVertex2f(x +  6, bottom + 19);
+    glEnd();
 }
 
 /* tumbleweed: tangled ball that rolls (spins with travel) and bounces */
@@ -471,9 +437,14 @@ void display()
 
     drawMountains();
 
-    /* background greenery -- slow parallax */
-    for (int i = 0; i < 7; i++)
-        drawSmallCactus(wrapX(60 + i * 115.0f, 20.0f, 40.0f), 148 + (i % 3), 0.95f + 0.1f * (i % 3));
+    /* little cacti far away */
+    drawSmallCactus(wrapX( 60, 20.0f, 40.0f), 150);
+    drawSmallCactus(wrapX(175, 20.0f, 40.0f), 148);
+    drawSmallCactus(wrapX(290, 20.0f, 40.0f), 151);
+    drawSmallCactus(wrapX(405, 20.0f, 40.0f), 149);
+    drawSmallCactus(wrapX(520, 20.0f, 40.0f), 150);
+    drawSmallCactus(wrapX(635, 20.0f, 40.0f), 148);
+    drawSmallCactus(wrapX(750, 20.0f, 40.0f), 151);
 
     drawGround();
 
@@ -481,11 +452,17 @@ void display()
     for (int i = 0; i < 6; i++)
         drawRock(wrapX(70 + i * 138.0f, 60.0f, 30.0f), 116 + 2 * (i % 2), 10 - (i % 2), 6 - (i % 2));
 
-    for (int i = 0; i < 4; i++)
-        drawBarrelCactus(wrapX(150 + i * 205.0f, 60.0f, 30.0f), 112, 1.0f + 0.15f * (i % 2));
+    /* little cacti on the sand */
+    drawSmallCactus(wrapX(150, 60.0f, 30.0f), 112);
+    drawSmallCactus(wrapX(355, 60.0f, 30.0f), 112);
+    drawSmallCactus(wrapX(560, 60.0f, 30.0f), 112);
+    drawSmallCactus(wrapX(765, 60.0f, 30.0f), 112);
 
-    for (int i = 0; i < 4; i++)
-        drawCactus(wrapX(120 + i * 190.0f, 60.0f, 70.0f), 110, 0.9f + 0.1f * (i % 2));
+    /* big cacti */
+    drawCactus(wrapX(120, 60.0f, 70.0f), 110);
+    drawCactus(wrapX(310, 60.0f, 70.0f), 110);
+    drawCactus(wrapX(500, 60.0f, 70.0f), 110);
+    drawCactus(wrapX(690, 60.0f, 70.0f), 110);
 
     /* foreground obstacles -- fastest layer */
     drawSkull(wrapX(300, 150.0f, 60.0f), 60, 1.0f);

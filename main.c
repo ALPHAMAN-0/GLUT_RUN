@@ -15,8 +15,9 @@
    gTime counts up. Things move because they use it.
    ================================================================== */
 
-static float gTime   = 0.0f;   /* seconds since start */
-static int   gPaused = 0;
+static float gTime    = 0.0f;   /* seconds since start        */
+static int   gPaused  = 0;
+static float sunAngle = 0.0f;   /* how far the sun has turned */
 
 /* Scroll an object so it leaves on the left and re-enters on the right.
    speed is in pixels/second; margin keeps it fully off-screen before wrapping. */
@@ -71,14 +72,36 @@ void drawSky()
     glEnd();
 }
 
+/* The sun: a round body with pointy rays around it, slowly turning.
+
+   glPushMatrix and glPopMatrix are like "save" and "put it back".
+   Everything written between them gets moved and turned.
+   Everything else in the picture is left alone. */
 void drawSun(float cx, float cy)
 {
-    glColor4f(1.0f, 0.95f, 0.70f, 0.18f);
-    drawEllipse(cx, cy, 54, 54);
-    glColor4f(1.0f, 0.95f, 0.70f, 0.28f);
-    drawEllipse(cx, cy, 38, 38);
-    glColor3f(1.0f, 0.97f, 0.80f);
-    drawEllipse(cx, cy, 24, 24);
+    glPushMatrix();
+
+    glTranslatef(cx, cy, 0);         /* go to where the sun sits */
+    glRotatef(sunAngle, 0, 0, 1);    /* turn it round            */
+
+    /* 12 pointy rays. Draw one ray, turn a little, draw the next. */
+    glColor3f(1.0f, 0.85f, 0.35f);
+    for (int i = 0; i < 12; i++)
+    {
+        glBegin(GL_TRIANGLES);
+            glVertex2f(-6, 30);      /* bottom left of the ray  */
+            glVertex2f( 6, 30);      /* bottom right of the ray */
+            glVertex2f( 0, 52);      /* the sharp point         */
+        glEnd();
+
+        glRotatef(30, 0, 0, 1);      /* 12 rays x 30 degrees = a full circle */
+    }
+
+    /* the round body, drawn last so it sits on top of the rays */
+    glColor3f(1.0f, 0.93f, 0.55f);
+    drawEllipse(0, 0, 28, 28);
+
+    glPopMatrix();
 }
 
 /* One cloud. It is just three white circles sitting next to each other,
@@ -489,6 +512,10 @@ void tick(int)
     {
         gTime += 0.016f;
         playerUpdate(0.016f);
+
+        sunAngle += 0.3f;                /* turn the sun a little */
+        if (sunAngle > 360.0f)
+            sunAngle -= 360.0f;
     }
     glutPostRedisplay();
     glutTimerFunc(16, tick, 0);

@@ -10,7 +10,11 @@
 
 #define PI 3.14159265f
 
-/* ---------------- animation state ---------------- */
+/* ==================================================================
+   HOW LONG THE SCENE HAS BEEN RUNNING
+   gTime counts up. Things move because they use it.
+   ================================================================== */
+
 static float gTime   = 0.0f;   /* seconds since start */
 static int   gPaused = 0;
 
@@ -24,7 +28,11 @@ static float wrapX(float x0, float speed, float margin)
     return x - margin;
 }
 
-/* ---------------- primitives ---------------- */
+/* ==================================================================
+   SHAPE HELPERS
+   The little shapes everything else is built from.
+   ================================================================== */
+
 void drawRect(float x1, float y1, float x2, float y2)
 {
     glBegin(GL_QUADS);
@@ -46,15 +54,11 @@ void drawEllipse(float cx, float cy, float rx, float ry)
     glEnd();
 }
 
-/* vertical capsule: flat bottom at baseY, rounded top, total height h */
-void drawCapsule(float cx, float baseY, float w, float h)
-{
-    float r = w * 0.5f;
-    drawRect(cx - r, baseY, cx + r, baseY + h - r);
-    drawEllipse(cx, baseY + h - r, r, r);
-}
+/* ==================================================================
+   THE SKY  -  the TOP of the picture
+   sky, sun, clouds, birds
+   ================================================================== */
 
-/* ---------------- sky ---------------- */
 void drawSky()
 {
     glBegin(GL_QUADS);
@@ -112,17 +116,24 @@ void drawCloudRow(float y, float size, float gap, float speed)
     }
 }
 
-/* One bird. It is just two lines that make a "V" shape.
-   wing = how high the wing tips are right now. */
+/* One bird. It is two lines that make a "V" shape.
+   wing = how high the wing tips are right now.
+
+   GL_LINES draws the dots in PAIRS: the first two dots make one line,
+   the next two dots make another line. So we need four dots for two wings. */
 void drawBird(float x, float y, float size, float wing)
 {
     glColor3f(0.28f, 0.36f, 0.42f);
     glLineWidth(2.0f);
 
-    glBegin(GL_LINE_STRIP);
-        glVertex2f(x - 8 * size, y + wing);   /* left wing tip  */
-        glVertex2f(x,            y);          /* the body       */
-        glVertex2f(x + 8 * size, y + wing);   /* right wing tip */
+    glBegin(GL_LINES);
+        /* left wing: from the wing tip in to the body */
+        glVertex2f(x - 8 * size, y + wing);
+        glVertex2f(x,            y);
+
+        /* right wing: from the body out to the wing tip */
+        glVertex2f(x,            y);
+        glVertex2f(x + 8 * size, y + wing);
     glEnd();
 }
 
@@ -152,7 +163,10 @@ void drawBirdRow(float y, float size, float gap, float speed)
     }
 }
 
-/* ---------------- terrain ---------------- */
+/* ==================================================================
+   THE MOUNTAINS  -  the MIDDLE of the picture
+   triangles that stand still
+   ================================================================== */
 
 /* One mountain. It is a triangle cut down the middle:
    the left half is bright because the sun is on that side,
@@ -209,6 +223,11 @@ void drawMountains()
     drawMountain(720, 160, 95, 32, 0.58f, 0.45f, 0.37f);
 }
 
+/* ==================================================================
+   THE GROUND  -  the BOTTOM of the picture
+   ground, rocks, cacti, tumbleweeds, skull
+   ================================================================== */
+
 void drawGround()
 {
     glColor3f(0.45f, 0.19f, 0.12f);
@@ -253,7 +272,13 @@ void drawRock(float cx, float cy, float rx, float ry)
     drawEllipse(cx - rx * 0.25f, cy + ry * 0.25f, rx * 0.45f, ry * 0.35f);
 }
 
-/* ---------------- cacti ---------------- */
+/* vertical capsule: flat bottom at baseY, rounded top, total height h */
+void drawCapsule(float cx, float baseY, float w, float h)
+{
+    float r = w * 0.5f;
+    drawRect(cx - r, baseY, cx + r, baseY + h - r);
+    drawEllipse(cx, baseY + h - r, r, r);
+}
 
 /* an arm: out from the trunk by `reach` (negative = left), then up by `rise` */
 static void cactusArm(float sx, float sy, float reach, float rise, float w)
@@ -344,8 +369,6 @@ void drawSmallCactus(float cx, float baseY, float s)
     drawEllipse(cx + 9 * s, baseY + 20 * s, 1.6f * s, 2.0f * s);
 }
 
-/* ---------------- moving obstacles ---------------- */
-
 /* tumbleweed: tangled ball that rolls (spins with travel) and bounces */
 void drawTumbleweed(float cx, float groundY, float r, float speed)
 {
@@ -399,7 +422,11 @@ void drawSkull(float cx, float cy, float s)
     drawEllipse(cx + 4 * s, cy + 3 * s, 2.2f * s, 2.4f * s);
 }
 
-/* ---------------- scene ---------------- */
+/* ==================================================================
+   PUTTING IT ALL TOGETHER
+   paint sky first, ground last, then run the window
+   ================================================================== */
+
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT);

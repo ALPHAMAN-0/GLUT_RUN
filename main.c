@@ -269,14 +269,19 @@ void drawGround()
     drawRect(0, 110, 800, 165);
 }
 
-void drawRock(float cx, float cy, float rx, float ry)
+/* A rock. One flat six-sided lump.
+   w = half its width, h = half its height. */
+void drawRock(float x, float y, float w, float h)
 {
-    glColor4f(0.35f, 0.20f, 0.10f, 0.22f);
-    drawEllipse(cx + rx * 0.35f, cy - ry * 0.55f, rx, ry * 0.45f);
     glColor3f(0.62f, 0.47f, 0.28f);
-    drawEllipse(cx, cy, rx, ry);
-    glColor3f(0.74f, 0.60f, 0.38f);
-    drawEllipse(cx - rx * 0.25f, cy + ry * 0.25f, rx * 0.45f, ry * 0.35f);
+    glBegin(GL_POLYGON);
+        glVertex2f(x - w,        y);
+        glVertex2f(x - w * 0.6f, y + h);
+        glVertex2f(x + w * 0.6f, y + h);
+        glVertex2f(x + w,        y);
+        glVertex2f(x + w * 0.6f, y - h);
+        glVertex2f(x - w * 0.6f, y - h);
+    glEnd();
 }
 
 /* A big cactus. It is just five green boxes:
@@ -357,56 +362,115 @@ void drawSmallCactus(float x, float bottom)
     glEnd();
 }
 
-/* A tumbleweed: a tangled dry bush. It stands still.
-   r = how big it is. */
-void drawTumbleweed(float cx, float groundY, float r)
+/* A tumbleweed: a tangled ball that rolls along, spins and bounces. */
+void drawTumbleweed(float cx, float groundY, float r, float speed)
 {
-    /* soft shadow on the ground underneath */
+    /* how high off the ground it is right now */
+    float bounce = fabs(sin(gTime * speed / (r * 2.4f))) * (r * 0.7f);
+    /* how far it has turned, in degrees */
+    float angle  = -(gTime * speed) / r * (180.0f / PI);
+
+    float sh = r * (1.0f - bounce / (r * 2.5f));  /* shadow shrinks as it lifts */
+    float d  = r * 0.70f;                         /* corners, for slanted twigs */
+    float n  = r * 0.46f;                         /* notches, to look untidy    */
+
+    /* the shadow stays down on the ground */
     glColor4f(0.30f, 0.14f, 0.08f, 0.30f);
-    drawEllipse(cx, groundY + 2, r, r * 0.28f);
+    glBegin(GL_POLYGON);
+        glVertex2f(cx - sh,        groundY + 2);
+        glVertex2f(cx - sh * 0.6f, groundY + 5);
+        glVertex2f(cx + sh * 0.6f, groundY + 5);
+        glVertex2f(cx + sh,        groundY + 2);
+        glVertex2f(cx + sh * 0.6f, groundY - 1);
+        glVertex2f(cx - sh * 0.6f, groundY - 1);
+    glEnd();
 
     glPushMatrix();
-        glTranslatef(cx, groundY + r, 0);
 
-        /* the tangled twigs: 14 straight lines through the middle */
+        glTranslatef(cx, groundY + r + bounce, 0);  /* bounce lifts it up    */
+        glRotatef(angle, 0, 0, 1);                  /* rolling makes it spin */
+
+        /* four twigs crossing through the middle */
         glColor3f(0.52f, 0.38f, 0.20f);
         glLineWidth(1.6f);
         glBegin(GL_LINES);
-        for (int i = 0; i < 14; i++)
-        {
-            float a = i * 2 * PI / 14;
-            glVertex2f(-r * 0.85f * cos(a), -r * 0.85f * sin(a));
-            glVertex2f( r * cos(a),          r * sin(a));
-        }
+            glVertex2f(-r,  0);   glVertex2f( r,  0);
+            glVertex2f( 0, -r);   glVertex2f( 0,  r);
+            glVertex2f(-d, -d);   glVertex2f( d,  d);
+            glVertex2f(-d,  d);   glVertex2f( d, -d);
         glEnd();
 
-        /* the bumpy outside edge */
+        /* the outside edge: eight dots joined in a ring,
+           two of them pulled inward so it looks tangled */
         glColor3f(0.63f, 0.48f, 0.26f);
         glBegin(GL_LINE_LOOP);
-        for (int i = 0; i < 14; i++)
-        {
-            float a  = i * 2 * PI / 14;
-            float rr = r * ((i % 3) ? 1.0f : 0.68f);
-            glVertex2f(rr * cos(a), rr * sin(a));
-        }
+            glVertex2f( r,  0);
+            glVertex2f( n,  n);
+            glVertex2f( 0,  r);
+            glVertex2f(-d,  d);
+            glVertex2f(-r,  0);
+            glVertex2f(-n, -n);
+            glVertex2f( 0, -r);
+            glVertex2f( d, -d);
         glEnd();
+
     glPopMatrix();
 }
 
-/* bleached skull half-buried in the foreground dirt */
-void drawSkull(float cx, float cy, float s)
+/* A cow skull: white boxes and two dark eyes. */
+void drawSkull(float x, float y)
 {
-    glColor4f(0.30f, 0.14f, 0.08f, 0.28f);
-    drawEllipse(cx, cy - 5 * s, 13 * s, 3.5f * s);
     glColor3f(0.90f, 0.87f, 0.78f);
-    drawEllipse(cx, cy + 2 * s, 9 * s, 7 * s);
-    drawRect(cx - 4 * s, cy - 6 * s, cx + 4 * s, cy + 2 * s);
-    glColor3f(0.86f, 0.82f, 0.72f);
-    drawEllipse(cx - 12 * s, cy + 6 * s, 5 * s, 3 * s);   /* horns */
-    drawEllipse(cx + 12 * s, cy + 6 * s, 5 * s, 3 * s);
+
+    /* the head */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 9, y - 2);
+        glVertex2f(x + 9, y - 2);
+        glVertex2f(x + 9, y + 9);
+        glVertex2f(x - 9, y + 9);
+    glEnd();
+
+    /* the snout hanging down */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 4, y - 8);
+        glVertex2f(x + 4, y - 8);
+        glVertex2f(x + 4, y - 2);
+        glVertex2f(x - 4, y - 2);
+    glEnd();
+
+    /* left horn */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 16, y + 4);
+        glVertex2f(x -  9, y + 4);
+        glVertex2f(x -  9, y + 8);
+        glVertex2f(x - 16, y + 8);
+    glEnd();
+
+    /* right horn */
+    glBegin(GL_QUADS);
+        glVertex2f(x +  9, y + 4);
+        glVertex2f(x + 16, y + 4);
+        glVertex2f(x + 16, y + 8);
+        glVertex2f(x +  9, y + 8);
+    glEnd();
+
     glColor3f(0.24f, 0.20f, 0.16f);
-    drawEllipse(cx - 4 * s, cy + 3 * s, 2.2f * s, 2.4f * s);
-    drawEllipse(cx + 4 * s, cy + 3 * s, 2.2f * s, 2.4f * s);
+
+    /* left eye */
+    glBegin(GL_QUADS);
+        glVertex2f(x - 6, y + 1);
+        glVertex2f(x - 2, y + 1);
+        glVertex2f(x - 2, y + 5);
+        glVertex2f(x - 6, y + 5);
+    glEnd();
+
+    /* right eye */
+    glBegin(GL_QUADS);
+        glVertex2f(x + 2, y + 1);
+        glVertex2f(x + 6, y + 1);
+        glVertex2f(x + 6, y + 5);
+        glVertex2f(x + 2, y + 5);
+    glEnd();
 }
 
 /* ==================================================================
@@ -446,9 +510,13 @@ void display()
 
     drawGround();
 
-    /* mid layer on the sand band */
-    for (int i = 0; i < 6; i++)
-        drawRock(wrapX(70 + i * 138.0f, 60.0f, 30.0f), 116 + 2 * (i % 2), 10 - (i % 2), 6 - (i % 2));
+    /* rocks on the sand */
+    drawRock(wrapX( 70, 60.0f, 30.0f), 116, 10, 6);
+    drawRock(wrapX(208, 60.0f, 30.0f), 118,  9, 5);
+    drawRock(wrapX(346, 60.0f, 30.0f), 116, 10, 6);
+    drawRock(wrapX(484, 60.0f, 30.0f), 118,  9, 5);
+    drawRock(wrapX(622, 60.0f, 30.0f), 116, 10, 6);
+    drawRock(wrapX(760, 60.0f, 30.0f), 118,  9, 5);
 
     /* little cacti on the sand */
     drawSmallCactus(wrapX(150, 60.0f, 30.0f), 112);
@@ -463,14 +531,13 @@ void display()
     drawCactus(wrapX(690, 60.0f, 70.0f), 110);
 
     /* foreground obstacles -- fastest layer */
-    drawSkull(wrapX(300, 150.0f, 60.0f), 60, 1.0f);
+    drawSkull(wrapX(300, 150.0f, 60.0f), 60);
     drawRock(wrapX(640, 150.0f, 60.0f), 30, 16, 9);
     drawRock(wrapX(120, 150.0f, 60.0f), 78, 12, 7);
     
-    /* tumbleweeds, standing still */
-    drawTumbleweed(150, 18, 15);
-    drawTumbleweed(430, 46, 20);
-    drawTumbleweed(690, 88, 13);
+    drawTumbleweed(wrapX(500,  150.0f, 60.0f), 18, 15, 150.0f);
+    drawTumbleweed(wrapX(180,  185.0f, 60.0f), 46, 20, 185.0f);
+    drawTumbleweed(wrapX(720,  120.0f, 60.0f), 88, 13, 120.0f);
     
     
     glutSwapBuffers();

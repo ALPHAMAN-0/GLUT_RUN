@@ -357,20 +357,18 @@ void drawSmallCactus(float x, float bottom)
     glEnd();
 }
 
-/* tumbleweed: tangled ball that rolls (spins with travel) and bounces */
-void drawTumbleweed(float cx, float groundY, float r, float speed)
+/* A tumbleweed: a tangled dry bush. It stands still.
+   r = how big it is. */
+void drawTumbleweed(float cx, float groundY, float r)
 {
-    float bounce = fabs(sin(gTime * speed / (r * 2.4f))) * (r * 0.7f);
-    float cy     = groundY + r + bounce;
-    float angle  = -(gTime * speed) / r * (180.0f / PI);
-
+    /* soft shadow on the ground underneath */
     glColor4f(0.30f, 0.14f, 0.08f, 0.30f);
-    drawEllipse(cx, groundY + 2, r * (1.0f - bounce / (r * 2.5f)), r * 0.28f);
+    drawEllipse(cx, groundY + 2, r, r * 0.28f);
 
     glPushMatrix();
-        glTranslatef(cx, cy, 0);
-        glRotatef(angle, 0, 0, 1);
+        glTranslatef(cx, groundY + r, 0);
 
+        /* the tangled twigs: 14 straight lines through the middle */
         glColor3f(0.52f, 0.38f, 0.20f);
         glLineWidth(1.6f);
         glBegin(GL_LINES);
@@ -382,6 +380,7 @@ void drawTumbleweed(float cx, float groundY, float r, float speed)
         }
         glEnd();
 
+        /* the bumpy outside edge */
         glColor3f(0.63f, 0.48f, 0.26f);
         glBegin(GL_LINE_LOOP);
         for (int i = 0; i < 14; i++)
@@ -468,9 +467,10 @@ void display()
     drawRock(wrapX(640, 150.0f, 60.0f), 30, 16, 9);
     drawRock(wrapX(120, 150.0f, 60.0f), 78, 12, 7);
     
-    drawTumbleweed(wrapX(500,  150.0f, 60.0f), 18, 15, 150.0f);
-    drawTumbleweed(wrapX(180,  185.0f, 60.0f), 46, 20, 185.0f);
-    drawTumbleweed(wrapX(720,  120.0f, 60.0f), 88, 13, 120.0f);
+    /* tumbleweeds, standing still */
+    drawTumbleweed(150, 18, 15);
+    drawTumbleweed(430, 46, 20);
+    drawTumbleweed(690, 88, 13);
     
     
     glutSwapBuffers();

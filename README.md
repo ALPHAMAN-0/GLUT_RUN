@@ -40,3 +40,7 @@ Once it reopens, a browser tab should pop to the noVNC page. If not, open http:/
 In the VS Code terminal (which is now inside the container), compile and run:
 
    gcc main.c -o app -lglut -lGLU -lGL && ./app
+
+Tests for the jump logic in `player.c` (inside the dev container; the macOS command is at the top of the test file):
+
+   gcc tests/player_test.c player.c -o tests/player_test.out -lglut -lGLU -lGL -lm && ./tests/player_test.out

@@ -2,6 +2,20 @@
 
 Open this project in VS Code and use the dev container to build and run GLUT programs inside Docker.
 
+## Architecture / How it Works
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Running: start
+    Running --> Paused: pause
+    Paused --> Running: resume
+    Running --> GameOver: lose
+    Running --> [*]: win
+    GameOver --> Idle: restart
+```
+
+
 Create the devcontainer folder and files on mac/Linux:
 
 ```bash

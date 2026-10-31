@@ -2,6 +2,20 @@
 
 Open this project in VS Code and use the dev container to build and run GLUT programs inside Docker.
 
+## Architecture / How it Works
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Running: start
+    Running --> Paused: pause
+    Paused --> Running: resume
+    Running --> GameOver: lose
+    Running --> [*]: win
+    GameOver --> Idle: restart
+```
+
+
 Create the devcontainer folder and files on mac/Linux:
 
 ```bash
@@ -40,3 +54,7 @@ Once it reopens, a browser tab should pop to the noVNC page. If not, open http:/
 In the VS Code terminal (which is now inside the container), compile and run:
 
    gcc main.c -o app -lglut -lGLU -lGL && ./app
+
+Tests for the jump logic in `player.c` (inside the dev container; the macOS command is at the top of the test file):
+
+   gcc tests/player_test.c player.c -o tests/player_test.out -lglut -lGLU -lGL -lm && ./tests/player_test.out

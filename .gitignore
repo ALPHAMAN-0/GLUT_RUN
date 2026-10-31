@@ -1,2 +1,13 @@
-config.bat
-node_modules
+# Compiled programs (build them with the gcc commands in README.md / plan.md)
+app
+main
+desert_scene
+platformer_app
+platformer_game
+platformer_player
+*.o
+*.out
+*.dSYM/
+
+# macOS
+.DS_Store

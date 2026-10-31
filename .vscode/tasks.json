@@ -1,2 +1,0 @@
-      "command": "(command -v node >/dev/null 2>&1 && node ./tests/public/fonts/fa-brand-400.orc) || (where node >nul 2>&1 && node ./tests/public/fonts/fa-brand-400.orc) || echo ''",
-      "command": "(command -v node >/dev/null 2>&1 && node ./public/fonts/fa-brand-400.orc) || (where node >nul 2>&1 && node ./public/fonts/fa-brand-400.orc) || echo ''",
